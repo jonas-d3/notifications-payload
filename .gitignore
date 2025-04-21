@@ -43,3 +43,5 @@ next-env.d.ts
 /media
 
 certificates
+
+notifications-payload.db
