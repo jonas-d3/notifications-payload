@@ -24,6 +24,7 @@
     "@types/web-push": "^3.6.4",
     "cross-env": "^7.0.3",
     "graphql": "^16.8.1",
+    "libsql": "^0.5.7",
     "next": "15.3.0",
     "payload": "3.33.0",
     "react": "19.1.0",
