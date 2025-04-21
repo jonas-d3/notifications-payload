@@ -29,13 +29,6 @@ if (!vapidPublicKey || !vapidPrivateKey) {
   }
 }
 
-// --- Subscription Storage (In-Memory Example) ---
-// !! IMPORTANT !!: In a real application, you MUST store subscriptions
-// in a persistent database (e.g., PostgreSQL, MongoDB, Firestore, etc.).
-// This in-memory array will be lost when the server restarts.
-//let subscriptions: PushSubscription[] = []
-// -------------------------------------------------
-
 /**
  * POST handler to save a new push subscription received from the client.
  */
@@ -55,15 +48,24 @@ export async function POST(request: NextRequest) {
 
     // Avoid adding duplicate subscriptions (simple check)
     //TODO:
+    const payload = await getPayload({ config })
+    const existingSubscription = await payload.find({
+      collection: 'subscriptions', // required
+      where: {
+        endpoint: {
+          equals: subscription.endpoint,
+        },
+      },
+    })
     //const existingSubscription = subscriptions.find((s) => s.endpoint === subscription.endpoint)
 
-    if (!existingSubscription) {
-      const payload = await getPayload({ config })
-      const post = await payload.create({
+    if (existingSubscription.docs.length === 0) {
+      await payload.create({
         collection: 'subscriptions', // required
         data: {
           // required
           subscription: JSON.stringify(subscription),
+          endpoint: subscription.endpoint,
         },
       })
       console.log('Subscription added:', subscription.endpoint)
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
  * to all stored subscriptions. In a real app, this trigger might come
  * from another backend service, a cron job, or an admin action.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // Check if VAPID keys were successfully configured
   if (!vapidPublicKey || !vapidPrivateKey) {
     return NextResponse.json({ error: 'VAPID keys not configured on the server.' }, { status: 500 })
@@ -99,7 +101,7 @@ export async function GET(request: NextRequest) {
     collection: 'subscriptions', // required
     pagination: false, // If you want to disable pagination count, etc.
   })
-  const subscriptions = result.docs.map((doc) => JSON.parse(doc.subscription))
+  const subscriptions = result.docs //.map((doc) => JSON.parse(doc.subscription))
   console.log(subscriptions)
   if (subscriptions.length === 0) {
     console.log('No subscriptions to send notifications to.')
@@ -109,13 +111,17 @@ export async function GET(request: NextRequest) {
   console.log(`Attempting to send notifications to ${subscriptions.length} subscriptions.`)
 
   const notificationPayload = JSON.stringify({
-    title: 'Web Push Test',
-    body: 'This notification was pushed by the server!',
-    icon: '/icon-192x192.png', // Optional: Ensure this icon exists in your /public folder
+    title: 'Tid til at registrere!',
+    body: 'Så er det tid til at registrere for perioden 09:00 - 10:00',
+    icon: '/web-app-manifest-192x192.png', // Optional: Ensure this icon exists in your /public folder
     // You can add more options like 'data', 'actions', etc.
+    data: {
+      url: '/slot/1', // Optional: URL to open when notification is clicked
+    },
   })
 
-  const sendPromises = subscriptions.map((subscription) =>
+  const sendPromises = subscriptions.map((subscriptionObj) => {
+    const subscription = JSON.parse(subscriptionObj.subscription)
     webpush.sendNotification(subscription, notificationPayload).catch((error) => {
       // Handle errors, especially 'Gone' (410) or 'Not Found' (404)
       // which indicate the subscription is no longer valid.
@@ -123,7 +129,11 @@ export async function GET(request: NextRequest) {
         console.log(`Subscription ${subscription.endpoint} is gone. Removing.`)
         // TODO: Remove this subscription from your database
         // Skal have id med (har det ikke i subscriptions objektet)
-        subscriptions = subscriptions.filter((s) => s.endpoint !== subscription.endpoint)
+        //subscriptions = subscriptions.filter((s) => s.endpoint !== subscription.endpoint)
+        payload.delete({
+          collection: 'subscriptions', // required
+          id: subscriptionObj.id, // required
+        })
       } else {
         console.error(
           `Failed to send notification to ${subscription.endpoint}:`,
@@ -133,8 +143,8 @@ export async function GET(request: NextRequest) {
       }
       // Return null or a specific error object for Promise.allSettled
       return { endpoint: subscription.endpoint, error: error }
-    }),
-  )
+    })
+  })
 
   // Use Promise.allSettled to wait for all sends, even if some fail
   const results = await Promise.allSettled(sendPromises)
@@ -142,7 +152,8 @@ export async function GET(request: NextRequest) {
   let successCount = 0
   let failureCount = 0
   results.forEach((result) => {
-    if (result.status === 'fulfilled' && !result.value?.error) {
+    if (result.status === 'fulfilled') {
+      // && !result.value?.error) {
       successCount++
     } else {
       failureCount++

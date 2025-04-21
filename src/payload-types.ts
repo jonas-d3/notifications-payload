@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     subscriptions: Subscription;
+    energy_slots: EnergySlot;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -79,6 +80,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     subscriptions: SubscriptionsSelect<false> | SubscriptionsSelect<true>;
+    energy_slots: EnergySlotsSelect<false> | EnergySlotsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -158,6 +160,19 @@ export interface Media {
 export interface Subscription {
   id: number;
   subscription: string;
+  endpoint: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "energy_slots".
+ */
+export interface EnergySlot {
+  id: number;
+  date?: string | null;
+  time: string;
+  value?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -179,6 +194,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'subscriptions';
         value: number | Subscription;
+      } | null)
+    | ({
+        relationTo: 'energy_slots';
+        value: number | EnergySlot;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -261,6 +280,18 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface SubscriptionsSelect<T extends boolean = true> {
   subscription?: T;
+  endpoint?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "energy_slots_select".
+ */
+export interface EnergySlotsSelect<T extends boolean = true> {
+  date?: T;
+  time?: T;
+  value?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -1,10 +1,15 @@
 import type { CollectionConfig } from 'payload'
-
+//TODO: unique
 export const Subscriptions: CollectionConfig = {
   slug: 'subscriptions',
   fields: [
     {
       name: 'subscription',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'endpoint',
       type: 'text',
       required: true,
     },

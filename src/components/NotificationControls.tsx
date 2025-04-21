@@ -80,7 +80,7 @@ export default function NotificationControls() {
 
   const sendSubscriptionToBackend = async (subscription: PushSubscription) => {
     try {
-      const response = await fetch('/api/notifications', {
+      const response = await fetch('/api-helpers/notifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ export default function NotificationControls() {
     }
     try {
       console.log('Attempting to trigger server push...')
-      const response = await fetch('/api/notifications') // Make GET request
+      const response = await fetch('/api-helpers/notifications') // Make GET request
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Server error: ${response.status}`)
