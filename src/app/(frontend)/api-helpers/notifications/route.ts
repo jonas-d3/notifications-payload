@@ -109,6 +109,14 @@ export async function GET(_request: NextRequest) {
   }
 
   console.log(`Attempting to send notifications to ${subscriptions.length} subscriptions.`)
+  /* const relevantSlot = await payload.find({
+    collection: 'energy_slots',
+    where: {
+      start_time: {
+        equals: '2023-11-09T09:00:00.000Z',
+      },
+    }
+  }) */
 
   const notificationPayload = JSON.stringify({
     title: 'Tid til at registrere!',
