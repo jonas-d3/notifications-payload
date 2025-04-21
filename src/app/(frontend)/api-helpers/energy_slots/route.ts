@@ -4,7 +4,12 @@ import config from '@payload-config'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const query = new Date(searchParams.get('date') || '') || new Date()
+  let query: string | Date = searchParams.get('date') || ''
+  if (!query) {
+    query = new Date()
+  } else {
+    query = new Date(query)
+  }
   const slots = [...Array(24)].map((_, index) => ({
     time: String(index).padStart(2, '0') + ':00',
     value: '',
