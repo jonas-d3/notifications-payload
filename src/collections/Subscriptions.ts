@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-//TODO: unique
+//TODO: unique, se evt EnergySlot.ts
 export const Subscriptions: CollectionConfig = {
   slug: 'subscriptions',
   fields: [

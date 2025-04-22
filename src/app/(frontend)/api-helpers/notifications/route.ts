@@ -139,7 +139,7 @@ export async function GET(_request: NextRequest) {
       },
     },
   })
-  //TODO: der kan komme to ens entries i db, unique eller lignende
+
   const id = relevantSlot.docs[0].id
   const notificationPayload = JSON.stringify({
     title: 'Tid til at registrere!',

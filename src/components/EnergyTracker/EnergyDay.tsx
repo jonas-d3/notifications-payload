@@ -2,7 +2,16 @@ import EnergySlot from './EnergySlot'
 
 import { getPayload } from 'payload'
 import config from '@payload-config'
+function formatDateInTimeZone(date: Date, timeZone = 'Europe/Copenhagen') {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
 
+  return formatter.format(date)
+}
 export default async function EnergyDay() {
   const payload = await getPayload({ config })
   const slots = await payload.find({
@@ -11,7 +20,7 @@ export default async function EnergyDay() {
     sort: 'time',
     where: {
       date: {
-        like: '2025-04-21%',
+        equals: formatDateInTimeZone(new Date()),
       },
     },
   })

@@ -20,4 +20,11 @@ export const EnergySlot: CollectionConfig = {
       defaultValue: '',
     },
   ],
+  indexes: [
+    // Define a composite unique index on date and time
+    {
+      unique: true,
+      fields: ['date', 'time'],
+    },
+  ],
 }

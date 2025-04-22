@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { LibsqlError } from '@libsql/client'
 
 function formatDateInTimeZone(date: Date, timeZone = 'Europe/Copenhagen') {
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -40,7 +41,14 @@ export async function GET(request: NextRequest) {
       createdDocsSequential.push(doc)
       console.log(`Created slot: ${doc.id}`)
     } catch (error) {
-      console.error(`Failed to create slot for time ${slotData.time}:`, error)
+      //@ts-expect-error TODO:
+      if (error?.rawCode === 2067) {
+        console.log('duplicate entry detected, skipping')
+      } else {
+        console.error(`Failed to create slot for time ${slotData.time}:`, error)
+      }
+      //console.error(`Failed to create slot for time ${slotData.time}:`, error)
+      //Uniqueue index probably hit
       // Decide how to handle errors: continue, stop, collect errors?
     }
   }
