@@ -1,3 +1,8 @@
+# notes
+
+Hosted on vercel
+uses cron jobs (https://console.cron-job.org/jobs)
+
 # Payload Blank Template
 
 This template comes configured with the bare minimum to get started on anything you need.
