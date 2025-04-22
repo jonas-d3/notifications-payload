@@ -2,19 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+function formatDateInTimeZone(date: Date, timeZone = 'Europe/Copenhagen') {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+
+  return formatter.format(date)
+}
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  let query: string | Date = searchParams.get('date') || ''
-  if (!query) {
-    query = new Date()
-  } else {
-    query = new Date(query)
+  const query: string = searchParams.get('date') || ''
+  let date = new Date()
+  if (query) {
+    date = new Date(query)
   }
+  const formatted = formatDateInTimeZone(date)
+
   const slots = [...Array(24)].map((_, index) => ({
     time: String(index).padStart(2, '0') + ':00',
     value: '',
-    date: query.toISOString(),
+    date: formatted,
   }))
+  console.log(slots[0].date)
 
   const payload = await getPayload({ config })
 

@@ -4,7 +4,9 @@ export const EnergySlot: CollectionConfig = {
   fields: [
     {
       name: 'date',
-      type: 'date',
+      type: 'text',
+      required: true,
+      index: true,
     },
     {
       name: 'time',

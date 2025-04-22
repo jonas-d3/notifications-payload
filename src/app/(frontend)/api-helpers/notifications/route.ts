@@ -8,7 +8,7 @@ import config from '@payload-config'
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
-console.log(vapidPrivateKey)
+
 // Basic validation for VAPID keys
 if (!vapidPublicKey || !vapidPrivateKey) {
   console.error(
@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const subscription = (await request.json()) as PushSubscription
-    console.log('Subscription data:', subscription)
     // Basic validation (add more robust checks as needed)
     if (!subscription || !subscription.endpoint) {
       return NextResponse.json({ error: 'Invalid subscription object received.' }, { status: 400 })
@@ -91,6 +90,24 @@ export async function POST(request: NextRequest) {
  * to all stored subscriptions. In a real app, this trigger might come
  * from another backend service, a cron job, or an admin action.
  */
+function formatDateInTimeZone(date: Date, timeZone = 'Europe/Copenhagen') {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+  return formatter.format(date)
+}
+function formatTimeInTimeZone(date: Date, timeZone = 'Europe/Copenhagen') {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hourCycle: 'h23',
+    hour: '2-digit',
+  })
+  return formatter.format(date)
+}
+
 export async function GET(_request: NextRequest) {
   // Check if VAPID keys were successfully configured
   if (!vapidPublicKey || !vapidPrivateKey) {
@@ -102,29 +119,35 @@ export async function GET(_request: NextRequest) {
     pagination: false, // If you want to disable pagination count, etc.
   })
   const subscriptions = result.docs //.map((doc) => JSON.parse(doc.subscription))
-  console.log(subscriptions)
   if (subscriptions.length === 0) {
     console.log('No subscriptions to send notifications to.')
     return NextResponse.json({ message: 'No active subscriptions found.' })
   }
 
   console.log(`Attempting to send notifications to ${subscriptions.length} subscriptions.`)
-  /* const relevantSlot = await payload.find({
+  const date = formatDateInTimeZone(new Date())
+  const rawTime = formatTimeInTimeZone(new Date())
+  const rawTimePostFixed = formatTimeInTimeZone(new Date()) + ':00'
+  const relevantSlot = await payload.find({
     collection: 'energy_slots',
     where: {
-      start_time: {
-        equals: '2023-11-09T09:00:00.000Z',
+      date: {
+        equals: date,
       },
-    }
-  }) */
-
+      time: {
+        equals: rawTimePostFixed,
+      },
+    },
+  })
+  //TODO: der kan komme to ens entries i db, unique eller lignende
+  const id = relevantSlot.docs[0].id
   const notificationPayload = JSON.stringify({
     title: 'Tid til at registrere!',
-    body: 'Så er det tid til at registrere for perioden 09:00 - 10:00',
+    body: `Så er det tid til at registrere for perioden ${rawTimePostFixed} - ${(Number(rawTime) + 1).toString().padStart(2, '0')}:00`,
     icon: '/web-app-manifest-192x192.png', // Optional: Ensure this icon exists in your /public folder
     // You can add more options like 'data', 'actions', etc.
     data: {
-      url: '/slot/1', // Optional: URL to open when notification is clicked
+      url: '/slot/' + id, // Optional: URL to open when notification is clicked
     },
   })
 
@@ -165,8 +188,6 @@ export async function GET(_request: NextRequest) {
       successCount++
     } else {
       failureCount++
-      // Log detailed failure info if needed (already logged in catch block above)
-      // console.error("Failed push:", result.reason || result.value?.error);
     }
   })
 

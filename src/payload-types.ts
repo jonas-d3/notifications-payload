@@ -170,7 +170,7 @@ export interface Subscription {
  */
 export interface EnergySlot {
   id: number;
-  date?: string | null;
+  date: string;
   time: string;
   value?: string | null;
   updatedAt: string;
